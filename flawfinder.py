@@ -804,9 +804,71 @@ def c_singleton_string(text):
 p_c_constant_string = re.compile(r'^\s*L?"([^\\]|\\[^0-6]|\\[0-6]+)*"$')
 
 
+# Format macros from inttypes.h (C99)
+def c_inttypes_print_macro(text):
+    return 1 if text in ['PRId8', 'PRId16', 'PRId32', 'PRId64',
+                         'PRIdLEAST8', 'PRIdLEAST16', 'PRIdLEAST32', 'PRIdLEAST64',
+                         'PRIdFAST8', 'PRIdFAST16', 'PRIdFAST32', 'PRIdFAST64',
+                         'PRIi8', 'PRIi16', 'PRIi32', 'PRIi64',
+                         'PRIiLEAST8', 'PRIiLEAST16', 'PRIiLEAST32', 'PRIiLEAST64',
+                         'PRIiFAST8', 'PRIiFAST16', 'PRIiFAST32', 'PRIiFAST64',
+                         'PRIo8', 'PRIo16', 'PRIo32', 'PRIo64',
+                         'PRIoLEAST8', 'PRIoLEAST16', 'PRIoLEAST32', 'PRIoLEAST64',
+                         'PRIoFAST8', 'PRIoFAST16', 'PRIoFAST32', 'PRIoFAST64',
+                         'PRIu8', 'PRIu16', 'PRIu32', 'PRIu64',
+                         'PRIuLEAST8', 'PRIuLEAST16', 'PRIuLEAST32', 'PRIuLEAST64',
+                         'PRIuFAST8', 'PRIuFAST16', 'PRIuFAST32', 'PRIuFAST64',
+                         'PRIx8', 'PRIx16', 'PRIx32', 'PRIx64',
+                         'PRIxLEAST8', 'PRIxLEAST16', 'PRIxLEAST32', 'PRIxLEAST64',
+                         'PRIxFAST8', 'PRIxFAST16', 'PRIxFAST32', 'PRIxFAST64',
+                         'PRIX8', 'PRIX16', 'PRIX32', 'PRIX64',
+                         'PRIXLEAST8', 'PRIXLEAST16', 'PRIXLEAST32', 'PRIXLEAST64',
+                         'PRIXFAST8', 'PRIXFAST16', 'PRIXFAST32', 'PRIXFAST64',
+                         'PRIdMAX', 'PRIiMAX', 'PRIoMAX', 'PRIuMAX', 'PRIxMAX', 'PRIXMAX',
+                         'PRIdPTR', 'PRIiPTR', 'PRIoPTR', 'PRIuPTR', 'PRIxPTR', 'PRIXPTR' ] else 0
+
+
+def c_inttypes_scan_macro(text):
+    return 1 if text in ['SCNd8', 'SCNd16', 'SCNd32', 'SCNd64',
+                         'SCNdLEAST8', 'SCNdLEAST16', 'SCNdLEAST32', 'SCNdLEAST64',
+                         'SCNdFAST8', 'SCNdFAST16', 'SCNdFAST32', 'SCNdFAST64',
+                         'SCNi8', 'SCNi16', 'SCNi32', 'SCNi64',
+                         'SCNiLEAST8', 'SCNiLEAST16', 'SCNiLEAST32', 'SCNiLEAST64',
+                         'SCNiFAST8', 'SCNiFAST16', 'SCNiFAST32', 'SCNiFAST64',
+                         'SCNo8', 'SCNo16', 'SCNo32', 'SCNo64',
+                         'SCNoLEAST8', 'SCNoLEAST16', 'SCNoLEAST32', 'SCNoLEAST64',
+                         'SCNoFAST8', 'SCNoFAST16', 'SCNoFAST32', 'SCNoFAST64',
+                         'SCNu8', 'SCNu16', 'SCNu32', 'SCNu64',
+                         'SCNuLEAST8', 'SCNuLEAST16', 'SCNuLEAST32', 'SCNuLEAST64',
+                         'SCNuFAST8', 'SCNuFAST16', 'SCNuFAST32', 'SCNuFAST64',
+                         'SCNx8', 'SCNx16', 'SCNx32', 'SCNx64',
+                         'SCNxLEAST8', 'SCNxLEAST16', 'SCNxLEAST32', 'SCNxLEAST64',
+                         'SCNxFAST8', 'SCNxFAST16', 'SCNxFAST32', 'SCNxFAST64',
+                         'SCNX8', 'SCNX16', 'SCNX32', 'SCNX64',
+                         'SCNXLEAST8', 'SCNXLEAST16', 'SCNXLEAST32', 'SCNXLEAST64',
+                         'SCNXFAST8', 'SCNXFAST16', 'SCNXFAST32', 'SCNXFAST64',
+                         'SCNdMAX', 'SCNiMAX', 'SCNoMAX', 'SCNuMAX', 'SCNxMAX', 'SCNXMAX',
+                         'SCNdPTR', 'SCNiPTR', 'SCNoPTR', 'SCNuPTR', 'SCNxPTR', 'SCNXPTR' ] else 0
+
+
 def c_constant_string(text):
     "Returns true if text is a constant C string."
     return 1 if p_c_constant_string.search(text) else 0
+
+
+def c_constant_string_with_print_macros(text):
+    "Returns true if text is a constant C string with inttypes print macros."
+    return 1 if p_c_constant_string.search(text) \
+                or all([c_constant_string(x) or \
+                        c_inttypes_print_macro(x) for x in text.split(" ")]) else 0
+
+
+def c_constant_string_with_scan_macros(text):
+    "Returns true if text is a constant C string with inttypes scan macros."
+    return 1 if p_c_constant_string.search(text) \
+                or all([c_constant_string(x) or \
+                        c_inttypes_scan_macro(x) for x in text.split(" ")]) else 0
+
 
 # Precompile patterns for speed.
 
@@ -886,7 +948,7 @@ def c_printf(hit):
     if format_position <= len(hit.parameters) - 1:
         # Assume that translators are trusted to not insert "evil" formats:
         source = strip_i18n(hit.parameters[format_position])
-        if c_constant_string(source):
+        if c_constant_string_with_print_macros(source):
             # Parameter is constant, so there's no risk of
             # format string problems.
             # At one time we warned that very old systems sometimes incorrectly
@@ -920,8 +982,9 @@ def c_sprintf(hit):
             hit.note = "Risk is low because the source is a constant character."
         else:
             source = strip_i18n(source)
-            if c_constant_string(source):
-                if not p_dangerous_sprintf_format.search(source):
+            if c_constant_string_with_print_macros(source):
+                if not (p_dangerous_sprintf_format.search(source) or \
+                        any([p_dangerous_sprintf_format.search(x) for x in source.split(" ")])):
                     hit.level = max(hit.level - 2, 1)
                     hit.note = "Risk is low because the source has a constant maximum length."
                 # otherwise, warn of potential buffer overflow (the default)
@@ -947,7 +1010,7 @@ def c_scanf(hit):
         # it's not clear that translators will be messing with INPUT formats,
         # but it's possible so we'll account for it.
         source = strip_i18n(hit.parameters[format_position])
-        if c_constant_string(source):
+        if c_constant_string_with_scan_macros(source):
             if p_dangerous_scanf_format.search(source):
                 pass  # Accept default.
             elif p_low_risk_scanf_format.search(source):
